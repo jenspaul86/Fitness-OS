@@ -1539,7 +1539,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.17';
+const APP_VERSION='0.9.18';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1570,7 +1570,7 @@ if(!S.plans||typeof S.plans!=='object'||Array.isArray(S.plans)||!Object.keys(S.p
 if(!S.activePlan||!S.plans[S.activePlan])S.activePlan=Object.keys(S.plans)[0];
 S.plan=S.plans[S.activePlan].plan;
 let day='A',idx=0,sets=[],timerId=null,seconds=0,timerTargetMs=null;
-let dragStartX=null,dragStartY=null,dragDecided=false,dragActive=false,dragDx=0,trackSettling=false;
+let dragStartX=null,dragStartY=null,dragDecided=false,dragActive=false,dragDx=0;
 const save=()=>localStorage.setItem(KEY,JSON.stringify(S));save(); const PLAN=()=>S.plan;
 function activePlanRecord(){return S.plans[S.activePlan]}
 function activePlanName(){return activePlanRecord()?.name||'Plan'}
@@ -1773,7 +1773,6 @@ function last(ex){return S.history.find(h=>h.exercises?.some(e=>e.name===ex))?.e
 function openWorkout(d,mode='real'){day=d;S.trainingMode=mode;S.draft=[];idx=0;sets=[];hideModal();$('#workout').classList.add('show');renderExercise()}
 
 function workoutDragStart(e){
-  if(trackSettling)return;
   const t=e.target;
   if(t.closest('input,textarea,select,button'))return;
   const touch=e.touches?.[0];
@@ -1811,39 +1810,18 @@ function workoutDragEnd(){
   dragStartX=dragStartY=null;
   dragActive=false;
   if(!wasActive)return;
-  const track=$('#workout .workout-track');
-  if(!track)return;
   const dx=dragDx,threshold=60;
-  if(dx<=-threshold&&idx<PLAN()[day].length-1)settleTrack(track,'next');
-  else if(dx>=threshold&&idx>0)settleTrack(track,'prev');
-  else springBack(track);
-}
-function springBack(track){
-  trackSettling=true;
-  let done=false;
-  const finish=()=>{if(done)return;done=true;track.removeEventListener('transitionend',onEnd);trackSettling=false};
-  const onEnd=ev=>{if(ev.target===track&&ev.propertyName==='transform')finish()};
-  track.addEventListener('transitionend',onEnd);
-  track.style.transition='transform .28s cubic-bezier(.16,1,.3,1)';
-  track.style.transform='translateX(-33.3334%)';
-  setTimeout(finish,340);
-}
-function settleTrack(track,dir){
-  trackSettling=true;
-  let done=false;
-  const finish=()=>{
-    if(done)return;done=true;
-    track.removeEventListener('transitionend',onEnd);
-    trackSettling=false;
-    stashCurrentExercise();
-    if(dir==='next')idx+=1;else idx-=1;
-    renderExercise();
-  };
-  const onEnd=ev=>{if(ev.target===track&&ev.propertyName==='transform')finish()};
-  track.addEventListener('transitionend',onEnd);
-  track.style.transition='transform .28s cubic-bezier(.16,1,.3,1)';
-  track.style.transform=dir==='next'?'translateX(-66.6668%)':'translateX(0%)';
-  setTimeout(finish,340);
+  if(dx<=-threshold&&idx<PLAN()[day].length-1){
+    stashCurrentExercise();idx+=1;renderExercise('next');
+  }else if(dx>=threshold&&idx>0){
+    stashCurrentExercise();idx-=1;renderExercise('prev');
+  }else{
+    const track=$('#workout .workout-track');
+    if(track){
+      track.style.transition='transform .28s cubic-bezier(.16,1,.3,1)';
+      track.style.transform='translateX(-33.3334%)';
+    }
+  }
 }
 function ensureWorkoutSwipe(){
   const w=$('#workout');
