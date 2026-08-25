@@ -1588,18 +1588,12 @@ function showPlanOptionsWizard(freq){
   pendingPlanFrequency=Math.max(1,Math.min(7,Number(freq)||2));
   showModal(`<div class="plan-wizard"><button type="button" class="wizard-back" data-new-plan>Zurück</button><h2>Sonstiges</h2>
     <div class="wizard-option-card"><label>Planname<input id="wizardPlanName" value="Neuer Plan"></label></div>
-    <h3>Experteneinstellungen</h3>
-    <div class="wizard-switch-list">
-      <label><span>RIR tracken</span><input id="wizardRir" type="checkbox" checked></label>
-      <label><span>Periodisierung</span><input id="wizardPeriod" type="checkbox"></label>
-      <label><span>Deload</span><input id="wizardDeload" type="checkbox"></label>
-    </div>
     <button type="button" class="primary wizard-bottom" data-create-wizard-plan>✓ Plan erstellen</button></div>`)
 }
 function createWizardPlan(){
   const name=($('#wizardPlanName')?.value||'Neuer Plan').trim()||'Neuer Plan',id=uniquePlanId(),plan={};
   for(let i=0;i<pendingPlanFrequency;i++)plan[String.fromCharCode(65+i)]=[];
-  S.plans[id]={name,plan,options:{rir:!!$('#wizardRir')?.checked,periodization:!!$('#wizardPeriod')?.checked,deload:!!$('#wizardDeload')?.checked}};
+  S.plans[id]={name,plan};
   S.activePlan=id;syncActivePlanPointer();S.planEditDay=planDayKeys()[0];save();hideModal();app()
 }
 function createPlan(mode){
