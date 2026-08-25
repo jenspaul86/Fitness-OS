@@ -1429,10 +1429,10 @@ body:has(#workout.show){
 @media(max-width:600px){
   input,select,textarea{font-size:16px!important}
 }
-#workout .workout-inner.slide-from-right{animation:workoutSlideRight .26s cubic-bezier(.2,.75,.3,1)}
-#workout .workout-inner.slide-from-left{animation:workoutSlideLeft .26s cubic-bezier(.2,.75,.3,1)}
-@keyframes workoutSlideRight{from{opacity:.25;transform:translateX(34px)}to{opacity:1;transform:translateX(0)}}
-@keyframes workoutSlideLeft{from{opacity:.25;transform:translateX(-34px)}to{opacity:1;transform:translateX(0)}}
+#workout .workout-inner.slide-from-right{animation:workoutSlideRight .34s cubic-bezier(.16,1,.3,1)}
+#workout .workout-inner.slide-from-left{animation:workoutSlideLeft .34s cubic-bezier(.16,1,.3,1)}
+@keyframes workoutSlideRight{from{opacity:.4;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
+@keyframes workoutSlideLeft{from{opacity:.4;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
 .set-block{display:contents}
 .set-recommendation{
   grid-column:2 / -1;
@@ -1530,7 +1530,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.15';
+const APP_VERSION='0.9.16';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1918,7 +1918,7 @@ ${[60,90,120,150,180,240,300].map(v=>`<option value="${v}" ${Number(rest)===v?'s
   const inner=$('#workout .workout-inner');
   if(inner&&direction!=='none'){
     inner.classList.add(direction==='prev'?'slide-from-left':'slide-from-right');
-    setTimeout(()=>inner.classList.remove('slide-from-left','slide-from-right'),280)
+    setTimeout(()=>inner.classList.remove('slide-from-left','slide-from-right'),360)
   }
 }
 
