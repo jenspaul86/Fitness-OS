@@ -3334,7 +3334,7 @@ Fitness OS könnte langfristig eher Meta-Dashboard/Coach werden, statt Bevel/YAZ
 - Live-Progressionslogik ist heuristisch, nicht validiertes Trainingsmodell.
 - Coach-Clipboard real auf iOS testen.
 - dynamische Trainingstage auf alte A/B-Annahmen prüfen.
-- Wizard-Optionen RIR/Periodisierung/Deload noch nicht komplett verdrahtet.
+- Wizard-Optionen RIR/Periodisierung/Deload waren wirkungslos (nie gelesenes `options`-Objekt) und wurden entfernt statt verdrahtet (Commit 09ba851). RIR wird weiterhin immer getrackt. Periodisierung/Deload sind fachlich noch nicht spezifiziert und bei Bedarf künftig neu zu konzipieren.
 - Hauptdashboard noch nicht gebaut.
 - keine direkte HealthKit-Anbindung.
 - möglicher Strategiewechsel Richtung Bevel + YAZIO + Apple Health + Meta-Coach.
