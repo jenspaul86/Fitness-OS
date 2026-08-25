@@ -1530,12 +1530,13 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.10';
+const APP_VERSION='0.9.11';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
 function migrate(){let current;try{current=JSON.parse(localStorage.getItem(KEY)||'null')}catch{};if(current)return current;let found=null;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k===KEY)continue;try{const x=JSON.parse(localStorage.getItem(k));if(usable(x)&&(/fitness|workout|training|alpha/i.test(k)||x.history||x.sessions)){found=x;break}}catch{}}const s=found||{};return {tab:'Training',settings:s.settings||{},history:s.history||s.sessions||[],plan:s.plan||s.PLAN||clone(DEFAULT_PLAN),notes:s.notes||{},migrated:!!found}}
-const S=migrate();S.settings??={};S.history??=[];S.plan??=clone(DEFAULT_PLAN);S.notes??={};S.images??={};S.timerSound??='signal';S.planEditDay??='A';
+const S=migrate();S.settings??={};S.history??=[];S.plan??=clone(DEFAULT_PLAN);S.notes??={};S.images??={};S.timerSound??='signal';S.planEditDay??='A';S.recovery??={};S.trainingView??='start';
+function todayKey(){return new Date().toISOString().slice(0,10)}
 function planDayKeys(plan=PLAN()){return Object.keys(plan||{}).filter(k=>Array.isArray(plan[k]))}
 function dayLabel(k){return 'Tag '+k}
 function nextDayKey(plan=PLAN()){
@@ -1677,9 +1678,29 @@ function latestSessionHtml(latest){
 }
 
 function greetingByHour(){const h=new Date().getHours();return h<11?'Guten Morgen':h<18?'Guten Tag':'Guten Abend'}
-function startPage(){return `<section class="card"><h2>${greetingByHour()}</h2><p>Hier entsteht deine tägliche Übersicht: deine Werte auf einen Blick und eine Empfehlung für heute.</p></section><section class="card"><h2>Im Aufbau</h2><p>Diese Seite ist aktuell ein Platzhalter. Sobald Recovery-, Schlaf- und weitere Gesundheitsdaten angebunden sind (geplant über HealthKit/Capacitor), erscheinen hier echte Auswertungen und Tagesempfehlungen statt dieses Hinweises.</p></section>`}
+function recoveryRecommendation(r){
+  const score=r.sleep+r.energy-r.soreness;
+  if(score>=14)return {cls:'good',title:'Gute Basis',text:'Schlaf und Energie hoch, kaum Muskelkater – heute spricht wenig gegen ein forderndes Training.'};
+  if(score>=6)return {cls:'mid',title:'Solide Basis',text:'Normale Ausgangslage – reguläres Training nach Plan ist eine gute Wahl.'};
+  return {cls:'bad',title:'Erholung im Fokus',text:'Schlaf/Energie niedrig oder spürbarer Muskelkater – heute eher locker angehen oder Ruhetag erwägen.'}
+}
+function startPage(){
+  const r=S.recovery[todayKey()];
+  const recoveryBlock=r?(()=>{const rec=recoveryRecommendation(r);return `<section class="card"><h2>Recovery heute</h2><div class="summary-grid"><div class="summary-kpi"><small>Schlaf</small><b>${r.sleep}/10</b></div><div class="summary-kpi"><small>Energie</small><b>${r.energy}/10</b></div><div class="summary-kpi"><small>Muskelkater</small><b>${r.soreness}/10</b></div></div><div class="summary-rating ${rec.cls}"><b>${rec.title}</b><p>${rec.text}</p></div><p class="hint">Einfache Faustregel auf Basis deiner Eingaben, kein validiertes Modell.</p></section>`})()
+    :`<section class="card"><h2>Recovery heute</h2><p>Noch keine Werte für heute erfasst.</p><p class="hint">Im Recovery-Tab kurz eintragen, dann erscheint hier eine Einschätzung für den Tag.</p></section>`;
+  return `<section class="card"><h2>${greetingByHour()}</h2><p>Deine Werte auf einen Blick und eine Empfehlung für heute.</p></section>${recoveryBlock}<section class="card"><h2>Im Aufbau</h2><p>Weitere Datenquellen (Schlaf/HRV aus Apple Health, Trainingslast-Trend) folgen, sobald eine Anbindung steht.</p></section>`
+}
 function trainingPage(){const latest=S.history[0],days=planDayKeys();return `<section class="card"><h2>Training starten</h2><p>Wähle deinen Plan und anschließend den Trainingstag.</p><div class="plan-manager"><span class="active-plan-label">Aktiver Plan</span>${planSelectHtml()}</div><div class="days">${days.map(d=>`<button class="day" data-start="${d}"><span><b>${dayLabel(d)}</b><small>${PLAN()[d].length} Übungen · ${PLAN()[d].reduce((a,x)=>a+Number(x[1]),0)} Sätze</small></span><span>Start ›</span></button>`).join('')}</div></section><section class="card"><h2>Letzte Einheit</h2>${latestSessionHtml(latest)}</section><p class="hint" style="text-align:center;opacity:.6;margin:8px 0 0">v${APP_VERSION} · ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</p>`}
-function recoveryPage(){return `<section class="card"><h2>Recovery</h2><p>Hier kommt deine Erholungskontrolle hin. Für heute: Schlaf, Schritte, Muskelkater und allgemeine Energie kurz einschätzen.</p></section>`}
+function recoverySliderHtml(field,label,min,max,val,lo,hi,cls=''){return `<div class="rating-slider ${cls}"><div class="rating-head"><span>${label}</span><b>${val}</b></div><input type="range" min="${min}" max="${max}" step="1" value="${val}" data-recovery="${field}"><div class="range-labels"><span>${lo}</span><span>${hi}</span></div></div>`}
+function recoveryPage(){
+  const r=S.recovery[todayKey()]||{};
+  const sleep=r.sleep??5,energy=r.energy??5,soreness=r.soreness??0;
+  return `<section class="card"><h2>Recovery heute</h2><p>Kurze Selbsteinschätzung für ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}. Fließt in die Start-Übersicht ein.</p>
+  ${recoverySliderHtml('sleep','Schlafqualität',1,10,sleep,'schlecht','hervorragend')}
+  ${recoverySliderHtml('energy','Energie',1,10,energy,'erschöpft','topfit')}
+  ${recoverySliderHtml('soreness','Muskelkater',0,10,soreness,'keiner','stark','pain')}
+  </section>`
+}
 function historyPage(){return `<section class="card"><h2>Historie</h2>${S.history.length?S.history.map(h=>`<div class="prev"><b>${new Date(h.date).toLocaleDateString('de-DE')} · Training ${esc(h.day||'—')}</b><br>${h.exercises?.length||0} Übungen · RPE ${h.rpe||'—'}${h.note?`<br>${esc(h.note)}`:''}</div>`).join('<br>'):'<p>Noch kein gespeichertes Training vorhanden.</p>'}</section>`}
 
 function requestPlanExerciseImage(d,i){
@@ -1730,7 +1751,13 @@ function planPage(){
   <div class="day-management"><button type="button" data-add-training-day>+ Tag hinzufügen</button>${keys.length>1?`<button type="button" class="danger" data-remove-training-day="${d}">Tag löschen</button>`:''}</div>
   <button type="button" class="primary plan-save-bar" data-plan-done>✓ Speichern</button></section>`}
 function dataPage(){const ds=planDayKeys();return `<section class="card"><h2>Daten & Sicherung</h2><p>${S.history.length} gespeicherte Trainingseinheit${S.history.length===1?'':'en'} · ${Object.keys(S.plans).length} Trainingspläne · Aktiv: ${esc(activePlanName())} · ${ds.length} Trainingstage.</p><div class="stack"><button class="primary" data-export>Komplettes Backup exportieren</button><button data-coach-export>Coach-Export kopieren</button><button data-import>Backup importieren</button><button class="danger" data-clear-history>Nur Trainingshistorie löschen</button></div><p class="hint">Backup enthält Historie, alle Pläne, Pausenzeiten, Bilder und Einstellungen.</p></section>`}
-function app(){const pages={Start:startPage,Training:trainingPage,Recovery:recoveryPage,Historie:historyPage,Plan:planPage,Daten:dataPage};$('#app').innerHTML=header()+(pages[S.tab]||trainingPage)();$('#tabs').innerHTML=['Start','Training','Recovery','Historie','Plan','Daten'].map(n=>`<button data-tab="${n}" class="${S.tab===n?'active':''}">${n}</button>`).join('')}
+function historyDataPage(){return historyPage()+dataPage()}
+function trainingHubPage(){
+  const view=S.trainingView==='plan'?'plan':'start';
+  return `<div class="plan-day-tabs"><button type="button" data-training-view="start" class="${view==='start'?'active':''}">Trainieren</button><button type="button" data-training-view="plan" class="${view==='plan'?'active':''}">Plan</button></div>${view==='plan'?planPage():trainingPage()}`
+}
+function nutritionPage(){return `<section class="card"><h2>Ernährung</h2><p>Für die Ernährungserfassung nutzt du aktuell YAZIO weiter – das läuft unverändert parallel.</p></section><section class="card"><h2>Im Aufbau</h2><p>Hier entstehen später eine Kalorien-/Makro-Übersicht und Empfehlungen, sobald eine Datenanbindung (z. B. über Apple Health) steht.</p></section>`}
+function app(){const pages={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage};$('#app').innerHTML=header()+(pages[S.tab]||trainingHubPage)();$('#tabs').innerHTML=['Start','Recovery','Training','Daten/Historie','Ernährung'].map(n=>`<button data-tab="${n}" class="${S.tab===n?'active':''}">${n}</button>`).join('')}
 function chooseMode(d){showModal(`<h2>Training ${d} starten</h2><p>Im Testtraining werden keine Werte in deiner Historie gespeichert.</p><div class="timer-actions"><button data-mode="test" data-day="${d}">Testtraining</button><button class="primary" data-mode="real" data-day="${d}">Echtes Training</button></div>`)}
 function last(ex){return S.history.find(h=>h.exercises?.some(e=>e.name===ex))?.exercises.find(e=>e.name===ex)}
 function openWorkout(d,mode='real'){day=d;S.trainingMode=mode;S.draft=[];idx=0;sets=[];hideModal();$('#workout').classList.add('show');renderExercise()}
@@ -2386,7 +2413,7 @@ document.addEventListener('click',e=>{
   if(pes){e.preventDefault();e.stopImmediatePropagation();savePlanExercise(pes.dataset.savePlanEx,pes.dataset.i);return}
   const ped=e.target.closest('[data-delete-plan-ex]');
   if(ped){e.preventDefault();e.stopImmediatePropagation();PLAN()[ped.dataset.deletePlanEx].splice(Number(ped.dataset.i),1);save();hideModal();app();return}
-  if(e.target.closest('[data-plan-done]')){e.preventDefault();e.stopImmediatePropagation();S.tab='Training';save();app();return}
+  if(e.target.closest('[data-plan-done]')){e.preventDefault();e.stopImmediatePropagation();S.tab='Training';S.trainingView='start';save();app();return}
 },true);
 
 document.addEventListener('click',e=>{
@@ -2524,8 +2551,8 @@ document.addEventListener('click',e=>{
 },true);
 
 document.addEventListener('click',e=>{
-const b=e.target.closest('button');if(!b)return;if(b.dataset.start)chooseMode(b.dataset.start);else if(b.dataset.mode)openWorkout(b.dataset.day,b.dataset.mode);else if(b.dataset.stop!==undefined){stopTimer();hideModal()}else if(b.dataset.add){adjustRunningTimer(+b.dataset.add)}else if(b.dataset.timerPreset){setRunningTimer(+b.dataset.timerPreset)}else if(b.dataset.timerClose!==undefined)hideModal();else if(b.dataset.summaryClose!==undefined)hideModal();else if(b.dataset.continue)hideModal();else if(b.dataset.tab){S.tab=b.dataset.tab;save();app()}else if(b.dataset.addPlan){S.plan[b.dataset.addPlan].push(['Neue Übung',3,10,1,0]);save();app()}else if(b.dataset.remove){S.plan[b.dataset.remove].splice(+b.dataset.i,1);save();app()}else if(b.dataset.export)fullExport();else if(b.dataset.coachExport)coachExport();else if(b.dataset.import)$('#importFile').click();else if(b.dataset.clearHistory&&confirm('Nur die Trainingshistorie wirklich löschen? Plan und Einstellungen bleiben erhalten.')){S.history=[];save();app()}});
-document.addEventListener('input',e=>{if(e.target.matches('[data-fixed]')){const name=PLAN()[day][idx][0],key=day+'|'+name;S.notes[key]=e.target.value;save()}});
+const b=e.target.closest('button');if(!b)return;if(b.dataset.start)chooseMode(b.dataset.start);else if(b.dataset.mode)openWorkout(b.dataset.day,b.dataset.mode);else if(b.dataset.stop!==undefined){stopTimer();hideModal()}else if(b.dataset.add){adjustRunningTimer(+b.dataset.add)}else if(b.dataset.timerPreset){setRunningTimer(+b.dataset.timerPreset)}else if(b.dataset.timerClose!==undefined)hideModal();else if(b.dataset.summaryClose!==undefined)hideModal();else if(b.dataset.continue)hideModal();else if(b.dataset.tab){S.tab=b.dataset.tab;save();app()}else if(b.dataset.trainingView){S.trainingView=b.dataset.trainingView;save();app()}else if(b.dataset.addPlan){S.plan[b.dataset.addPlan].push(['Neue Übung',3,10,1,0]);save();app()}else if(b.dataset.remove){S.plan[b.dataset.remove].splice(+b.dataset.i,1);save();app()}else if(b.dataset.export)fullExport();else if(b.dataset.coachExport)coachExport();else if(b.dataset.import)$('#importFile').click();else if(b.dataset.clearHistory&&confirm('Nur die Trainingshistorie wirklich löschen? Plan und Einstellungen bleiben erhalten.')){S.history=[];save();app()}});
+document.addEventListener('input',e=>{if(e.target.matches('[data-fixed]')){const name=PLAN()[day][idx][0],key=day+'|'+name;S.notes[key]=e.target.value;save()}else if(e.target.dataset.recovery){const k=todayKey();S.recovery[k]=S.recovery[k]||{};S.recovery[k][e.target.dataset.recovery]=+e.target.value;save();const b=e.target.closest('.rating-slider')?.querySelector('.rating-head b');if(b)b.textContent=e.target.value}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-active-plan]')){const id=e.target.value;if(S.plans[id]){S.activePlan=id;syncActivePlanPointer();save();app()}return}if(e.target.matches('[data-rest]')){S.settings[day+'|'+PLAN()[day][idx][0]]={rest:Math.max(15,+e.target.value||120)};save()}if(e.target.dataset.set!==undefined)sets[+e.target.dataset.set][e.target.dataset.field]=+e.target.value;if(e.target.dataset.plan){const x=e.target,d=S.plan[x.dataset.plan][+x.dataset.i],f=+x.dataset.f;d[f]=f===0?x.value:+x.value;save()}});$('#timer').addEventListener('click',e=>{
   if(e.target.closest('[data-stop]')){
     e.preventDefault();e.stopPropagation();stopTimer();return;
