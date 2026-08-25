@@ -3331,7 +3331,7 @@ Fitness OS könnte langfristig eher Meta-Dashboard/Coach werden, statt Bevel/YAZ
 - v0.9.8 nach Layout-Reparaturen in echtem Training validieren.
 - Timer-Audio auf iOS bleibt fragil.
 - AudioSession + parallele Musik im Browser nicht zuverlässig genug.
-- Live-Progressionslogik ist heuristisch, nicht validiertes Trainingsmodell.
+- ~~Live-Progressionslogik ist heuristisch, nicht validiertes Trainingsmodell – nachvollziehbarer machen~~ – umgesetzt als aufklappbarer Info-Text im Daten-Tab (statt als Live-UI-Erklärung direkt am Empfehlungs-Widget im Trainingsscreen): erklärt die Logik für ersten und weitere Sätze, mit explizitem Hinweis, dass es sich um eine einfache Heuristik ohne validiertes Trainingsmodell handelt (Commit-Serie ab v0.9.14).
 - Coach-Clipboard real auf iOS testen.
 - ~~dynamische Trainingstage auf alte A/B-Annahmen prüfen~~ – geklärt: kein Bug gefunden. Die Kernlogik (`planDayKeys()`, `nextDayKey()`, Tag-Tabs, Lösch-Guard, Bild-/Pausenzeit-Keys, Historie, Coach-Export, Wizard) ist bereits vollständig dynamisch und funktioniert für beliebig viele Trainingstage. Einziger Rest ist `DEFAULT_PLAN` (bewusste Seed-Daten für 2 Tage, kein Bug, wird vom Wizard sofort überschrieben).
 - Wizard-Optionen RIR/Periodisierung/Deload waren wirkungslos (nie gelesenes `options`-Objekt) und wurden entfernt statt verdrahtet (Commit 09ba851). RIR wird weiterhin immer getrackt. Periodisierung/Deload sind fachlich noch nicht spezifiziert und bei Bedarf künftig neu zu konzipieren.

@@ -1,6 +1,6 @@
 # Fitness OS – Projektregeln für Claude Code
 
-Dieses Repo enthält `index.html` (Version 0.9.13), eine Single-File Web-App (reines HTML/CSS/JS, kein Framework). Die vollständige Projektübergabe (Datenstruktur, Regressionshistorie, Screens/UI-Ideen, Exportformate) liegt in `HANDOFF.md` im selben Repo – bei tieferen Fragen dort nachschlagen.
+Dieses Repo enthält `index.html` (Version 0.9.14), eine Single-File Web-App (reines HTML/CSS/JS, kein Framework). Die vollständige Projektübergabe (Datenstruktur, Regressionshistorie, Screens/UI-Ideen, Exportformate) liegt in `HANDOFF.md` im selben Repo – bei tieferen Fragen dort nachschlagen.
 
 ## Harte Entwicklungsregeln (unbedingt einhalten)
 
