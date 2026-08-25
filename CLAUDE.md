@@ -1,6 +1,6 @@
 # Fitness OS – Projektregeln für Claude Code
 
-Dieses Repo enthält `index.html` (Version 0.9.8), eine Single-File Web-App (reines HTML/CSS/JS, kein Framework). Die vollständige Projektübergabe (Datenstruktur, Regressionshistorie, Screens/UI-Ideen, Exportformate) liegt in `HANDOFF.md` im selben Repo – bei tieferen Fragen dort nachschlagen.
+Dieses Repo enthält `index.html` (Version 0.9.9), eine Single-File Web-App (reines HTML/CSS/JS, kein Framework). Die vollständige Projektübergabe (Datenstruktur, Regressionshistorie, Screens/UI-Ideen, Exportformate) liegt in `HANDOFF.md` im selben Repo – bei tieferen Fragen dort nachschlagen.
 
 ## Harte Entwicklungsregeln (unbedingt einhalten)
 
@@ -13,6 +13,7 @@ Dieses Repo enthält `index.html` (Version 0.9.8), eine Single-File Web-App (rei
 7. iPhone-Safari: nicht nur `min-height` verwenden; Inputs mindestens 16px (gegen Auto-Zoom).
 8. Web-Audio auf iOS ist nur Best-Effort – keine Verlässlichkeit versprechen.
 9. Zielplattform ist ausschließlich iPad und iPhone (kein Mac/Android/Desktop-Web).
+10. **Bei jeder echten (nicht rein kosmetischen Test-)Änderung wird die Versionsnummer hochgezählt** – im Code (`APP_VERSION`-Konstante in `index.html`) und in der sichtbaren Anzeige (Badge, Startseiten-Footer, Trainingsscreen-Header, Export-Payloads), damit jederzeit eindeutig erkennbar ist, ob die laufende App auf dem neuesten Stand ist.
 
 ## Kerncheck nach jeder Änderung
 

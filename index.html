@@ -1530,6 +1530,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
+const APP_VERSION='0.9.9';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1626,7 +1627,7 @@ function deleteActivePlan(){
   syncActivePlanPointer();
   save();app()
 }
-function header(){const latest=S.history[0];return `<div class="top"><div><h1>Fitness OS</h1><p>${latest?'Letztes Training: '+new Date(latest.date).toLocaleDateString('de-DE'):'Bereit für das nächste Training'}</p></div><span class="badge">v0.9.8</span></div>`}
+function header(){const latest=S.history[0];return `<div class="top"><div><h1>Fitness OS</h1><p>${latest?'Letztes Training: '+new Date(latest.date).toLocaleDateString('de-DE'):'Bereit für das nächste Training'}</p></div><span class="badge">v${APP_VERSION}</span></div>`}
 
 function sessionVolume(h){
   return (h?.exercises||[]).reduce((sum,e)=>sum+(e.sets||[]).reduce((s,x)=>s+(Number(x.kg)||0)*(Number(x.reps)||0),0),0)
@@ -1675,7 +1676,7 @@ function latestSessionHtml(latest){
   </div>`
 }
 
-function trainingPage(){const latest=S.history[0],days=planDayKeys();return `<section class="card"><h2>Training starten</h2><p>Wähle deinen Plan und anschließend den Trainingstag.</p><div class="plan-manager"><span class="active-plan-label">Aktiver Plan</span>${planSelectHtml()}</div><div class="days">${days.map(d=>`<button class="day" data-start="${d}"><span><b>${dayLabel(d)}</b><small>${PLAN()[d].length} Übungen · ${PLAN()[d].reduce((a,x)=>a+Number(x[1]),0)} Sätze</small></span><span>Start ›</span></button>`).join('')}</div></section><section class="card"><h2>Letzte Einheit</h2>${latestSessionHtml(latest)}</section>`}
+function trainingPage(){const latest=S.history[0],days=planDayKeys();return `<section class="card"><h2>Training starten</h2><p>Wähle deinen Plan und anschließend den Trainingstag.</p><div class="plan-manager"><span class="active-plan-label">Aktiver Plan</span>${planSelectHtml()}</div><div class="days">${days.map(d=>`<button class="day" data-start="${d}"><span><b>${dayLabel(d)}</b><small>${PLAN()[d].length} Übungen · ${PLAN()[d].reduce((a,x)=>a+Number(x[1]),0)} Sätze</small></span><span>Start ›</span></button>`).join('')}</div></section><section class="card"><h2>Letzte Einheit</h2>${latestSessionHtml(latest)}</section><p class="hint" style="text-align:center;opacity:.6;margin:8px 0 0">v${APP_VERSION} · ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})}</p>`}
 function recoveryPage(){return `<section class="card"><h2>Recovery</h2><p>Hier kommt deine Erholungskontrolle hin. Für heute: Schlaf, Schritte, Muskelkater und allgemeine Energie kurz einschätzen.</p></section>`}
 function historyPage(){return `<section class="card"><h2>Historie</h2>${S.history.length?S.history.map(h=>`<div class="prev"><b>${new Date(h.date).toLocaleDateString('de-DE')} · Training ${esc(h.day||'—')}</b><br>${h.exercises?.length||0} Übungen · RPE ${h.rpe||'—'}${h.note?`<br>${esc(h.note)}`:''}</div>`).join('<br>'):'<p>Noch kein gespeichertes Training vorhanden.</p>'}</section>`}
 
@@ -1876,7 +1877,7 @@ function liveRecommendationHtml(i){
 }
 
 function renderExercise(direction='none'){
-  ensureWorkoutSwipe();let [name,count,reps,rir,kg]=PLAN()[day][idx],rec=progressionRecommendation(name,reps,rir,kg,count),key=day+'|'+name,rest=S.settings[key]?.rest||120,previous=last(name),draftEx=S.draft.find(e=>e.name===name);sets=draftEx?clone(draftEx.sets):Array.from({length:count},()=>({kg:rec.kg,reps:rec.reps,rir:rec.rir,done:false}));$('#workout').innerHTML=`<div class="workout-inner"><div class="workout-head"><button data-close>‹ Übersicht</button><span>${S.trainingMode==='test'?'Testtraining · ':''}${day} · Übung ${idx+1}/${PLAN()[day].length} · v0.9.8</span>${idx>0?'<button data-prev-ex>‹</button>':''}</div><div class="progress"><i style="width:${((idx+1)/PLAN()[day].length)*100}%"></i></div>${exerciseStripHtml()}<section class="card"><h1>${esc(name)}</h1><div class="prev">Vorheriges Training: ${previous?previous.sets.map(x=>x.kg+' kg × '+x.reps+' @ RIR '+x.rir).join(' · '):'Noch keine Werte gespeichert'}</div><div class="rest"><label>Pausentimer</label><select data-rest>
+  ensureWorkoutSwipe();let [name,count,reps,rir,kg]=PLAN()[day][idx],rec=progressionRecommendation(name,reps,rir,kg,count),key=day+'|'+name,rest=S.settings[key]?.rest||120,previous=last(name),draftEx=S.draft.find(e=>e.name===name);sets=draftEx?clone(draftEx.sets):Array.from({length:count},()=>({kg:rec.kg,reps:rec.reps,rir:rec.rir,done:false}));$('#workout').innerHTML=`<div class="workout-inner"><div class="workout-head"><button data-close>‹ Übersicht</button><span>${S.trainingMode==='test'?'Testtraining · ':''}${day} · Übung ${idx+1}/${PLAN()[day].length} · v${APP_VERSION}</span>${idx>0?'<button data-prev-ex>‹</button>':''}</div><div class="progress"><i style="width:${((idx+1)/PLAN()[day].length)*100}%"></i></div>${exerciseStripHtml()}<section class="card"><h1>${esc(name)}</h1><div class="prev">Vorheriges Training: ${previous?previous.sets.map(x=>x.kg+' kg × '+x.reps+' @ RIR '+x.rir).join(' · '):'Noch keine Werte gespeichert'}</div><div class="rest"><label>Pausentimer</label><select data-rest>
 ${[60,90,120,150,180,240,300].map(v=>`<option value="${v}" ${Number(rest)===v?'selected':''}>${v} Sek.</option>`).join('')}
 </select></div>
 <div class="fixed-entry">
@@ -2306,7 +2307,7 @@ function download(data,name){
 function coachExportPayload(){
   return {
     schema:'fitness-os-coach-export',
-    version:'0.9.8',
+    version:APP_VERSION,
     exportedAt:new Date().toISOString(),
     activePlan:activePlanName(),
     latestFitnessOsSessions:S.history.slice(0,50),
@@ -2329,7 +2330,7 @@ async function copyTextRobust(text){
   }catch(_){return false}
 }
 
-function fullExport(){download({schema:'fitness-os-backup',version:'0.9.8',exportedAt:new Date().toISOString(),data:S},'Fitness-OS-Backup-'+new Date().toISOString().slice(0,10)+'.json')}async function coachExport(){
+function fullExport(){download({schema:'fitness-os-backup',version:APP_VERSION,exportedAt:new Date().toISOString(),data:S},'Fitness-OS-Backup-'+new Date().toISOString().slice(0,10)+'.json')}async function coachExport(){
   const payload=coachExportPayload(),text=JSON.stringify(payload,null,2);
   const ok=await copyTextRobust(text);
   if(ok){
@@ -2528,7 +2529,7 @@ document.addEventListener('change',e=>{if(e.target.matches('[data-active-plan]')
     e.preventDefault();e.stopPropagation();stopTimer();return;
   }
   timerDialog();
-});$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text()),d=x.data||x;if(!usable(d))throw Error();download({schema:'fitness-os-backup',version:'0.9.8',exportedAt:new Date().toISOString(),data:S},'Fitness-OS-Sicherung-vor-Import.json');Object.assign(S,{history:d.history||d.sessions||[],settings:d.settings||S.settings,notes:d.notes||S.notes,images:d.images||S.images});
+});$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text()),d=x.data||x;if(!usable(d))throw Error();download({schema:'fitness-os-backup',version:APP_VERSION,exportedAt:new Date().toISOString(),data:S},'Fitness-OS-Sicherung-vor-Import.json');Object.assign(S,{history:d.history||d.sessions||[],settings:d.settings||S.settings,notes:d.notes||S.notes,images:d.images||S.images});
 if(d.plans&&typeof d.plans==='object'&&Object.keys(d.plans).length){
   S.plans=d.plans;
   S.activePlan=(d.activePlan&&S.plans[d.activePlan])?d.activePlan:Object.keys(S.plans)[0];
