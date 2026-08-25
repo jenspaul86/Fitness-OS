@@ -1530,7 +1530,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.11';
+const APP_VERSION='0.9.12';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1757,7 +1757,7 @@ function trainingHubPage(){
   return `<div class="plan-day-tabs"><button type="button" data-training-view="start" class="${view==='start'?'active':''}">Trainieren</button><button type="button" data-training-view="plan" class="${view==='plan'?'active':''}">Plan</button></div>${view==='plan'?planPage():trainingPage()}`
 }
 function nutritionPage(){return `<section class="card"><h2>Ernährung</h2><p>Für die Ernährungserfassung nutzt du aktuell YAZIO weiter – das läuft unverändert parallel.</p></section><section class="card"><h2>Im Aufbau</h2><p>Hier entstehen später eine Kalorien-/Makro-Übersicht und Empfehlungen, sobald eine Datenanbindung (z. B. über Apple Health) steht.</p></section>`}
-function app(){const pages={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage};$('#app').innerHTML=header()+(pages[S.tab]||trainingHubPage)();$('#tabs').innerHTML=['Start','Recovery','Training','Daten/Historie','Ernährung'].map(n=>`<button data-tab="${n}" class="${S.tab===n?'active':''}">${n}</button>`).join('')}
+function app(){const pages={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage};$('#app').innerHTML=header()+(pages[S.tab]||trainingHubPage)();$('#tabs').innerHTML=['Start','Recovery','Training','Ernährung','Daten/Historie'].map(n=>`<button data-tab="${n}" class="${S.tab===n?'active':''}">${n}</button>`).join('')}
 function chooseMode(d){showModal(`<h2>Training ${d} starten</h2><p>Im Testtraining werden keine Werte in deiner Historie gespeichert.</p><div class="timer-actions"><button data-mode="test" data-day="${d}">Testtraining</button><button class="primary" data-mode="real" data-day="${d}">Echtes Training</button></div>`)}
 function last(ex){return S.history.find(h=>h.exercises?.some(e=>e.name===ex))?.exercises.find(e=>e.name===ex)}
 function openWorkout(d,mode='real'){day=d;S.trainingMode=mode;S.draft=[];idx=0;sets=[];hideModal();$('#workout').classList.add('show');renderExercise()}
