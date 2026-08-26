@@ -406,6 +406,10 @@
     background:#155b35!important;
     border-color:#238b50!important;
   }
+  .exercise-strip button.current.done{
+    border:2px solid #3da2ff!important;
+    background:#17324d!important;
+  }
   .exercise-strip button.done::after{
     content:"✓";
     position:absolute;
@@ -1433,9 +1437,10 @@ body:has(#workout.show){
 #workout .workout-inner.slide-from-left{animation:workoutSlideLeft .34s cubic-bezier(.16,1,.3,1)}
 @keyframes workoutSlideRight{from{opacity:.4;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
 @keyframes workoutSlideLeft{from{opacity:.4;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
-#workout .workout-track{display:flex;width:300%;height:100%;transform:translateX(-33.3334%);touch-action:pan-y}
+#workout .workout-track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;height:100%}
+#workout .workout-track::-webkit-scrollbar{display:none}
 #workout .workout-track>.workout-inner,
-#workout .workout-track>.workout-peek{flex:0 0 33.3334%;width:33.3334%;height:100%;min-width:0}
+#workout .workout-track>.workout-peek{flex:0 0 100%;width:100%;height:100%;min-width:0;scroll-snap-align:center;scroll-snap-stop:always}
 #workout .workout-peek{display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
 #workout .workout-peek-inner{max-width:680px;margin:auto;text-align:center;opacity:.5}
 #workout .workout-peek-inner img{width:120px;height:120px;object-fit:cover;border-radius:16px;margin:0 auto 12px;display:block}
@@ -1539,7 +1544,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.18';
+const APP_VERSION='0.9.19';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1570,7 +1575,6 @@ if(!S.plans||typeof S.plans!=='object'||Array.isArray(S.plans)||!Object.keys(S.p
 if(!S.activePlan||!S.plans[S.activePlan])S.activePlan=Object.keys(S.plans)[0];
 S.plan=S.plans[S.activePlan].plan;
 let day='A',idx=0,sets=[],timerId=null,seconds=0,timerTargetMs=null;
-let dragStartX=null,dragStartY=null,dragDecided=false,dragActive=false,dragDx=0;
 const save=()=>localStorage.setItem(KEY,JSON.stringify(S));save(); const PLAN=()=>S.plan;
 function activePlanRecord(){return S.plans[S.activePlan]}
 function activePlanName(){return activePlanRecord()?.name||'Plan'}
@@ -1772,65 +1776,21 @@ function chooseMode(d){showModal(`<h2>Training ${d} starten</h2><p>Im Testtraini
 function last(ex){return S.history.find(h=>h.exercises?.some(e=>e.name===ex))?.exercises.find(e=>e.name===ex)}
 function openWorkout(d,mode='real'){day=d;S.trainingMode=mode;S.draft=[];idx=0;sets=[];hideModal();$('#workout').classList.add('show');renderExercise()}
 
-function workoutDragStart(e){
-  const t=e.target;
-  if(t.closest('input,textarea,select,button'))return;
-  const touch=e.touches?.[0];
-  if(!touch)return;
-  dragStartX=touch.clientX;
-  dragStartY=touch.clientY;
-  dragDecided=false;
-  dragActive=false;
-  dragDx=0;
-}
-function workoutDragMove(e){
-  if(dragStartX==null)return;
-  const touch=e.touches?.[0];
-  if(!touch)return;
-  const dx=touch.clientX-dragStartX,dy=touch.clientY-dragStartY;
-  if(!dragDecided){
-    if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
-    dragDecided=true;
-    dragActive=Math.abs(dx)>Math.abs(dy)*1.2;
-    if(!dragActive){dragStartX=dragStartY=null;return}
-  }
-  if(!dragActive)return;
+function bindWorkoutTrackScroll(){
   const track=$('#workout .workout-track');
   if(!track)return;
-  e.preventDefault();
-  let clamped=dx;
-  if(dx>0&&idx<=0)clamped=dx*.3;
-  if(dx<0&&idx>=PLAN()[day].length-1)clamped=dx*.3;
-  dragDx=clamped;
-  track.style.transition='none';
-  track.style.transform=`translateX(calc(-33.3334% + ${clamped}px))`;
-}
-function workoutDragEnd(){
-  const wasActive=dragActive;
-  dragStartX=dragStartY=null;
-  dragActive=false;
-  if(!wasActive)return;
-  const dx=dragDx,threshold=60;
-  if(dx<=-threshold&&idx<PLAN()[day].length-1){
-    stashCurrentExercise();idx+=1;renderExercise('next');
-  }else if(dx>=threshold&&idx>0){
-    stashCurrentExercise();idx-=1;renderExercise('prev');
-  }else{
-    const track=$('#workout .workout-track');
-    if(track){
-      track.style.transition='transform .28s cubic-bezier(.16,1,.3,1)';
-      track.style.transform='translateX(-33.3334%)';
-    }
-  }
-}
-function ensureWorkoutSwipe(){
-  const w=$('#workout');
-  if(!w||w.dataset.swipeBound==='1')return;
-  w.addEventListener('touchstart',workoutDragStart,{passive:true});
-  w.addEventListener('touchmove',workoutDragMove,{passive:false});
-  w.addEventListener('touchend',workoutDragEnd,{passive:true});
-  w.addEventListener('touchcancel',workoutDragEnd,{passive:true});
-  w.dataset.swipeBound='1';
+  track.scrollLeft=track.clientWidth;
+  let settleTimer=null;
+  track.addEventListener('scroll',()=>{
+    if(settleTimer)clearTimeout(settleTimer);
+    settleTimer=setTimeout(()=>{
+      const w=track.clientWidth;
+      if(!w)return;
+      const pos=track.scrollLeft;
+      if(pos<w*.5&&idx>0){stashCurrentExercise();idx-=1;renderExercise()}
+      else if(pos>w*1.5&&idx<PLAN()[day].length-1){stashCurrentExercise();idx+=1;renderExercise()}
+    },100)
+  },{passive:true});
 }
 
 
@@ -1954,7 +1914,7 @@ function liveRecommendationHtml(i){
 }
 
 function renderExercise(direction='none'){
-  ensureWorkoutSwipe();let [name,count,reps,rir,kg]=PLAN()[day][idx],rec=progressionRecommendation(name,reps,rir,kg,count),key=day+'|'+name,rest=S.settings[key]?.rest||120,previous=last(name),draftEx=S.draft.find(e=>e.name===name);sets=draftEx?clone(draftEx.sets):Array.from({length:count},()=>({kg:rec.kg,reps:rec.reps,rir:rec.rir,done:false}));$('#workout').innerHTML=`<div class="workout-track">${exercisePeekHtml(idx-1)}<div class="workout-inner"><div class="workout-head"><button data-close>‹ Übersicht</button><span>${S.trainingMode==='test'?'Testtraining · ':''}${day} · Übung ${idx+1}/${PLAN()[day].length} · v${APP_VERSION}</span>${idx>0?'<button data-prev-ex>‹</button>':''}</div><div class="progress"><i style="width:${((idx+1)/PLAN()[day].length)*100}%"></i></div>${exerciseStripHtml()}<section class="card"><h1>${esc(name)}</h1><div class="prev">Vorheriges Training: ${previous?previous.sets.map(x=>x.kg+' kg × '+x.reps+' @ RIR '+x.rir).join(' · '):'Noch keine Werte gespeichert'}</div><div class="rest"><label>Pausentimer</label><select data-rest>
+  let [name,count,reps,rir,kg]=PLAN()[day][idx],rec=progressionRecommendation(name,reps,rir,kg,count),key=day+'|'+name,rest=S.settings[key]?.rest||120,previous=last(name),draftEx=S.draft.find(e=>e.name===name);sets=draftEx?clone(draftEx.sets):Array.from({length:count},()=>({kg:rec.kg,reps:rec.reps,rir:rec.rir,done:false}));$('#workout').innerHTML=`<div class="workout-track">${exercisePeekHtml(idx-1)}<div class="workout-inner"><div class="workout-head"><button data-close>‹ Übersicht</button><span>${S.trainingMode==='test'?'Testtraining · ':''}${day} · Übung ${idx+1}/${PLAN()[day].length} · v${APP_VERSION}</span>${idx>0?'<button data-prev-ex>‹</button>':''}</div><div class="progress"><i style="width:${((idx+1)/PLAN()[day].length)*100}%"></i></div>${exerciseStripHtml()}<section class="card"><h1>${esc(name)}</h1><div class="prev">Vorheriges Training: ${previous?previous.sets.map(x=>x.kg+' kg × '+x.reps+' @ RIR '+x.rir).join(' · '):'Noch keine Werte gespeichert'}</div><div class="rest"><label>Pausentimer</label><select data-rest>
 ${[60,90,120,150,180,240,300].map(v=>`<option value="${v}" ${Number(rest)===v?'selected':''}>${v} Sek.</option>`).join('')}
 </select></div>
 <div class="fixed-entry">
@@ -1962,7 +1922,7 @@ ${[60,90,120,150,180,240,300].map(v=>`<option value="${v}" ${Number(rest)===v?'s
   <textarea data-fixed placeholder="z. B. Sitz 6 · Fuß 9/10 · Griff 2 · Pin 4">${esc(S.notes[key]||'')}</textarea>
   <small>Wird dauerhaft gespeichert und bei jedem Training dieser Übung angezeigt.</small>
 </div>
-<p>Änderungen werden für diese Übung gespeichert.</p><div class="row labels"><span>Satz</span><span>kg</span><span>Wdh.</span><span>RIR</span><span>✓</span></div><div id="setRows"></div><p>Nach dem letzten Satz geht es automatisch weiter.</p></section></div>${exercisePeekHtml(idx+1)}</div>`;renderSets();
+<p>Änderungen werden für diese Übung gespeichert.</p><div class="row labels"><span>Satz</span><span>kg</span><span>Wdh.</span><span>RIR</span><span>✓</span></div><div id="setRows"></div><p>Nach dem letzten Satz geht es automatisch weiter.</p></section></div>${exercisePeekHtml(idx+1)}</div>`;renderSets();bindWorkoutTrackScroll();
   const inner=$('#workout .workout-inner');
   if(inner&&direction!=='none'){
     inner.classList.add(direction==='prev'?'slide-from-left':'slide-from-right');
