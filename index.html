@@ -1439,8 +1439,11 @@ body:has(#workout.show){
 #workout .workout-inner.slide-from-left{animation:workoutSlideLeft .34s cubic-bezier(.16,1,.3,1)}
 @keyframes workoutSlideRight{from{opacity:.4;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
 @keyframes workoutSlideLeft{from{opacity:.4;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
-.tab-content.slide-from-right{animation:workoutSlideRight .34s cubic-bezier(.16,1,.3,1)}
-.tab-content.slide-from-left{animation:workoutSlideLeft .34s cubic-bezier(.16,1,.3,1)}
+#app .tabs-track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#app .tabs-track::-webkit-scrollbar{display:none}
+#app .tabs-track>.tab-current,
+#app .tabs-track>.tab-peek{flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:center;scroll-snap-stop:always;overflow:hidden}
+#app .tabs-track>.tab-peek{pointer-events:none}
 #workout .workout-track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;height:100%}
 #workout .workout-track::-webkit-scrollbar{display:none}
 #workout .workout-track>.workout-inner,
@@ -1545,7 +1548,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.23';
+const APP_VERSION='0.9.24';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1773,33 +1776,32 @@ function trainingHubPage(){
 }
 function nutritionPage(){return `<section class="card"><h2>Ernährung</h2><p>Für die Ernährungserfassung nutzt du aktuell YAZIO weiter – das läuft unverändert parallel.</p></section><section class="card"><h2>Im Aufbau</h2><p>Hier entstehen später eine Kalorien-/Makro-Übersicht und Empfehlungen, sobald eine Datenanbindung (z. B. über Apple Health) steht.</p></section>`}
 const TAB_ORDER=['Start','Recovery','Training','Ernährung','Daten/Historie'];
-function app(direction='none'){const pages={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage};$('#app').innerHTML=header()+`<div class="tab-content">${(pages[S.tab]||trainingHubPage)()}</div>`;$('#tabs').innerHTML=TAB_ORDER.map(n=>`<button data-tab="${n}" class="${S.tab===n?'active':''}">${n}</button>`).join('');if(direction!=='none'){const c=$('#app .tab-content');if(c){c.classList.add(direction==='prev'?'slide-from-left':'slide-from-right');setTimeout(()=>c.classList.remove('slide-from-left','slide-from-right'),360)}}}
-function bindTabSwipe(){
-  const el=$('#app');
-  if(!el)return;
-  let t=null;
-  el.addEventListener('touchstart',e=>{
-    if(e.touches.length!==1)return;
-    const p=e.touches[0];
-    t={x:p.clientX,y:p.clientY,dx:0,locked:null,skip:!!e.target.closest('input[type="range"],.plan-day-tabs.dynamic')};
+const TAB_PAGES={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage};
+function tabPeekHtml(name){return name?`<div class="tab-peek">${(TAB_PAGES[name]||trainingHubPage)()}</div>`:'<div class="tab-peek empty"></div>'}
+function app(){
+  const i=TAB_ORDER.indexOf(S.tab);
+  $('#app').innerHTML=header()+`<div class="tabs-track">${tabPeekHtml(TAB_ORDER[i-1])}<div class="tab-current">${(TAB_PAGES[S.tab]||trainingHubPage)()}</div>${tabPeekHtml(TAB_ORDER[i+1])}</div>`;
+  $('#tabs').innerHTML=TAB_ORDER.map(n=>`<button data-tab="${n}" class="${S.tab===n?'active':''}">${n}</button>`).join('');
+  bindTabsTrackScroll();
+}
+function bindTabsTrackScroll(){
+  const track=$('#app .tabs-track');
+  if(!track)return;
+  const cur=track.querySelector('.tab-current');
+  if(cur)track.style.height=cur.scrollHeight+'px';
+  track.scrollLeft=track.clientWidth;
+  let settleTimer=null;
+  track.addEventListener('scroll',()=>{
+    if(settleTimer)clearTimeout(settleTimer);
+    settleTimer=setTimeout(()=>{
+      const w=track.clientWidth;
+      if(!w)return;
+      const pos=track.scrollLeft;
+      const i=TAB_ORDER.indexOf(S.tab);
+      if(pos<w*.5&&i>0){S.tab=TAB_ORDER[i-1];save();app()}
+      else if(pos>w*1.5&&i<TAB_ORDER.length-1){S.tab=TAB_ORDER[i+1];save();app()}
+    },100)
   },{passive:true});
-  el.addEventListener('touchmove',e=>{
-    if(!t||t.skip)return;
-    const p=e.touches[0];
-    t.dx=p.clientX-t.x;
-    const dy=p.clientY-t.y;
-    if(t.locked===null&&(Math.abs(t.dx)>10||Math.abs(dy)>10))t.locked=Math.abs(t.dx)>Math.abs(dy)?'x':'y';
-    if(t.locked==='x')e.preventDefault();
-  },{passive:false});
-  el.addEventListener('touchend',()=>{
-    if(!t)return;
-    const{dx,locked,skip}=t;t=null;
-    if(skip||locked!=='x'||Math.abs(dx)<60)return;
-    const i=TAB_ORDER.indexOf(S.tab);
-    if(dx<0&&i<TAB_ORDER.length-1){S.tab=TAB_ORDER[i+1];save();app('next')}
-    else if(dx>0&&i>0){S.tab=TAB_ORDER[i-1];save();app('prev')}
-  },{passive:true});
-  el.addEventListener('touchcancel',()=>{t=null},{passive:true});
 }
 function chooseMode(d){showModal(`<h2>Training ${d} starten</h2><p>Im Testtraining werden keine Werte in deiner Historie gespeichert.</p><div class="timer-actions"><button data-mode="test" data-day="${d}">Testtraining</button><button class="primary" data-mode="real" data-day="${d}">Echtes Training</button></div>`)}
 function last(ex){return S.history.find(h=>h.exercises?.some(e=>e.name===ex))?.exercises.find(e=>e.name===ex)}
@@ -2602,7 +2604,7 @@ document.addEventListener('click',e=>{
 },true);
 
 document.addEventListener('click',e=>{
-const b=e.target.closest('button');if(!b)return;if(b.dataset.start)chooseMode(b.dataset.start);else if(b.dataset.mode)openWorkout(b.dataset.day,b.dataset.mode);else if(b.dataset.stop!==undefined){stopTimer();hideModal()}else if(b.dataset.add){adjustRunningTimer(+b.dataset.add)}else if(b.dataset.timerPreset){setRunningTimer(+b.dataset.timerPreset)}else if(b.dataset.timerClose!==undefined)hideModal();else if(b.dataset.summaryClose!==undefined)hideModal();else if(b.dataset.continue)hideModal();else if(b.dataset.tab){const from=TAB_ORDER.indexOf(S.tab),to=TAB_ORDER.indexOf(b.dataset.tab);S.tab=b.dataset.tab;save();app(to>from?'next':to<from?'prev':'none')}else if(b.dataset.trainingView){S.trainingView=b.dataset.trainingView;save();app()}else if(b.dataset.addPlan){S.plan[b.dataset.addPlan].push(['Neue Übung',3,10,1,0]);save();app()}else if(b.dataset.remove){S.plan[b.dataset.remove].splice(+b.dataset.i,1);save();app()}else if(b.dataset.export)fullExport();else if(b.dataset.coachExport)coachExport();else if(b.dataset.import)$('#importFile').click();else if(b.dataset.clearHistory&&confirm('Nur die Trainingshistorie wirklich löschen? Plan und Einstellungen bleiben erhalten.')){S.history=[];save();app()}});
+const b=e.target.closest('button');if(!b)return;if(b.dataset.start)chooseMode(b.dataset.start);else if(b.dataset.mode)openWorkout(b.dataset.day,b.dataset.mode);else if(b.dataset.stop!==undefined){stopTimer();hideModal()}else if(b.dataset.add){adjustRunningTimer(+b.dataset.add)}else if(b.dataset.timerPreset){setRunningTimer(+b.dataset.timerPreset)}else if(b.dataset.timerClose!==undefined)hideModal();else if(b.dataset.summaryClose!==undefined)hideModal();else if(b.dataset.continue)hideModal();else if(b.dataset.tab){S.tab=b.dataset.tab;save();app()}else if(b.dataset.trainingView){S.trainingView=b.dataset.trainingView;save();app()}else if(b.dataset.addPlan){S.plan[b.dataset.addPlan].push(['Neue Übung',3,10,1,0]);save();app()}else if(b.dataset.remove){S.plan[b.dataset.remove].splice(+b.dataset.i,1);save();app()}else if(b.dataset.export)fullExport();else if(b.dataset.coachExport)coachExport();else if(b.dataset.import)$('#importFile').click();else if(b.dataset.clearHistory&&confirm('Nur die Trainingshistorie wirklich löschen? Plan und Einstellungen bleiben erhalten.')){S.history=[];save();app()}});
 document.addEventListener('input',e=>{if(e.target.matches('[data-fixed]')){const name=PLAN()[day][idx][0],key=day+'|'+name;S.notes[key]=e.target.value;save()}else if(e.target.dataset.recovery){const k=todayKey();S.recovery[k]=S.recovery[k]||{};S.recovery[k][e.target.dataset.recovery]=+e.target.value;save();const b=e.target.closest('.rating-slider')?.querySelector('.rating-head b');if(b)b.textContent=e.target.value}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-active-plan]')){const id=e.target.value;if(S.plans[id]){S.activePlan=id;syncActivePlanPointer();save();app()}return}if(e.target.matches('[data-rest]')){S.settings[day+'|'+PLAN()[day][idx][0]]={rest:Math.max(15,+e.target.value||120)};save()}if(e.target.dataset.set!==undefined)sets[+e.target.dataset.set][e.target.dataset.field]=+e.target.value;if(e.target.dataset.plan){const x=e.target,d=S.plan[x.dataset.plan][+x.dataset.i],f=+x.dataset.f;d[f]=f===0?x.value:+x.value;save()}});$('#timer').addEventListener('click',e=>{
   if(e.target.closest('[data-stop]')){
@@ -2637,7 +2639,6 @@ window.addEventListener('pageshow',()=>{
 
 document.addEventListener('pointerdown',()=>{ensureTimerAudio();primeTimerMedia()}, {once:true,passive:true});
 
-bindTabSwipe();
 app();
 </script>
 <div id="timerFlash" aria-hidden="true"></div>
