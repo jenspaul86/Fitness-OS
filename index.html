@@ -1548,7 +1548,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.26';
+const APP_VERSION='0.9.27';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1708,7 +1708,7 @@ function startPage(){
     :`<section class="card"><h2>Recovery heute</h2><p>Noch keine Werte für heute erfasst.</p><p class="hint">Im Recovery-Tab kurz eintragen, dann erscheint hier eine Einschätzung für den Tag.</p></section>`;
   return `<section class="card"><h2>${greetingByHour()}</h2><p>Deine Werte auf einen Blick und eine Empfehlung für heute.</p></section>${recoveryBlock}<section class="card"><h2>Im Aufbau</h2><p>Weitere Datenquellen (Schlaf/HRV aus Apple Health, Trainingslast-Trend) folgen, sobald eine Anbindung steht.</p></section>`
 }
-function trainingPage(){const latest=S.history[0],days=planDayKeys();return `<section class="card"><h2>Training starten</h2><p>Wähle deinen Plan und anschließend den Trainingstag.</p><div class="plan-manager"><span class="active-plan-label">Aktiver Plan</span>${planSelectHtml()}</div><div class="days">${days.map(d=>`<button class="day" data-start="${d}"><span><b>${dayLabel(d)}</b><small>${PLAN()[d].length} Übungen · ${PLAN()[d].reduce((a,x)=>a+Number(x[1]),0)} Sätze</small></span><span>Start ›</span></button>`).join('')}</div></section><section class="card"><h2>Letzte Einheit</h2>${latestSessionHtml(latest)}</section><p class="hint" style="text-align:center;opacity:.6;margin:8px 0 0">v${APP_VERSION} · ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</p>`}
+function trainingPage(){const latest=S.history[0],days=planDayKeys();return `<section class="card"><h2>Training starten</h2><p>Wähle deinen Plan und anschließend den Trainingstag.</p><div class="plan-manager"><span class="active-plan-label">Aktiver Plan</span>${planSelectHtml()}</div><div class="days">${days.map(d=>`<button class="day" data-start="${d}"><span><b>${dayLabel(d)}</b><small>${PLAN()[d].length} Übungen · ${PLAN()[d].reduce((a,x)=>a+Number(x[1]),0)} Sätze</small></span><span>Start ›</span></button>`).join('')}</div></section><section class="card"><h2>Letzte Einheit</h2>${latestSessionHtml(latest)}</section>`}
 function recoverySliderHtml(field,label,min,max,val,lo,hi,cls=''){return `<div class="rating-slider ${cls}"><div class="rating-head"><span>${label}</span><b>${val}</b></div><input type="range" min="${min}" max="${max}" step="1" value="${val}" data-recovery="${field}"><div class="range-labels"><span>${lo}</span><span>${hi}</span></div></div>`}
 function recoveryPage(){
   const r=S.recovery[todayKey()]||{};
@@ -1778,9 +1778,10 @@ function nutritionPage(){return `<section class="card"><h2>Ernährung</h2><p>Fü
 const TAB_ORDER=['Start','Recovery','Training','Ernährung','Daten/Historie'];
 const TAB_PAGES={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage};
 function tabPeekHtml(name){return name?`<div class="tab-peek">${(TAB_PAGES[name]||trainingHubPage)()}</div>`:'<div class="tab-peek empty"></div>'}
+function versionFooterHtml(){return `<p class="hint" style="text-align:center;opacity:.6;margin:8px 0 0">v${APP_VERSION} · ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</p>`}
 function app(){
   const i=TAB_ORDER.indexOf(S.tab);
-  $('#app').innerHTML=header()+`<div class="tabs-track">${tabPeekHtml(TAB_ORDER[i-1])}<div class="tab-current">${(TAB_PAGES[S.tab]||trainingHubPage)()}</div>${tabPeekHtml(TAB_ORDER[i+1])}</div>`;
+  $('#app').innerHTML=header()+`<div class="tabs-track">${tabPeekHtml(TAB_ORDER[i-1])}<div class="tab-current">${(TAB_PAGES[S.tab]||trainingHubPage)()}</div>${tabPeekHtml(TAB_ORDER[i+1])}</div>`+versionFooterHtml();
   $('#tabs').innerHTML=TAB_ORDER.map(n=>`<button data-tab="${n}" class="${S.tab===n?'active':''}">${n}</button>`).join('');
   $('#tabs .active')?.scrollIntoView({block:'nearest',inline:'nearest'});
   bindTabsTrackScroll();
