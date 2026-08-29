@@ -3018,6 +3018,20 @@ Fix v0.9.8:
 Lehre:
 - bei Entfernen eines UI-Blocks immer auch dessen feste Grid-/Flex-Reservierung entfernen.
 
+## v0.9.32
+
+Bug:
+- im `change`-Handler für `#exerciseImageInput` wurde nach dem Speichern eines neuen Übungsbilds (`S.images[key]=...`) kein Modal-Refresh ausgeführt, wenn die Anfrage aus dem Plan-Editor (`showPlanExerciseEditor`) oder der Workout-Übersicht (`showWorkoutOverview`) kam.
+- das jeweils offene Modal (position:fixed, volle Fläche, z-index über der Tab-Leiste) blieb dadurch stehen und blockierte alle weiteren Klicks inkl. Tab-Wechsel.
+
+Fix:
+- Herkunft der Anfrage weiterhin über `dataset.exerciseDay` unterschieden (von `requestPlanExerciseImage` gesetzt, von `requestExerciseImage` nicht gesetzt).
+- Plan-Editor-Herkunft: nach dem Speichern `hideModal()` + `showPlanExerciseEditor(targetDay, targetIndex)` erneut aufrufen, damit das neue Bild sofort sichtbar ist.
+- Workout-Übersicht-Herkunft: nach dem Speichern `renderExercise()` UND `showWorkoutOverview()` erneut aufrufen – symmetrisch zu `removeExerciseImage()`, das das bereits richtig macht.
+
+Lehre:
+- ein Modal, das aus einem asynchronen Callback (`FileReader.onload`) heraus aktuell gehalten werden muss, braucht dieselbe Neuöffnen-Logik wie die zugehörige Entfernen-Funktion – sonst bleibt es unsichtbar hängen und blockiert die UI.
+
 ---
 
 # 4. Screens / UI-Ideen
