@@ -1548,12 +1548,12 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.28';
+const APP_VERSION='0.9.29';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
 function migrate(){let current;try{current=JSON.parse(localStorage.getItem(KEY)||'null')}catch{};if(current)return current;let found=null;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k===KEY)continue;try{const x=JSON.parse(localStorage.getItem(k));if(usable(x)&&(/fitness|workout|training|alpha/i.test(k)||x.history||x.sessions)){found=x;break}}catch{}}const s=found||{};return {tab:'Training',settings:s.settings||{},history:s.history||s.sessions||[],plan:s.plan||s.PLAN||clone(DEFAULT_PLAN),notes:s.notes||{},migrated:!!found}}
-const S=migrate();S.settings??={};S.history??=[];S.plan??=clone(DEFAULT_PLAN);S.notes??={};S.images??={};S.timerSound??='signal';S.planEditDay??='A';S.recovery??={};S.trainingView??='start';
+const S=migrate();S.settings??={};S.history??=[];S.plan??=clone(DEFAULT_PLAN);S.notes??={};S.images??={};S.timerSound??='signal';S.planEditDay??='A';S.recovery??={};S.trainingView??='start';S.prefs??={};S.prefs.goalPhase??='erhalt';
 function todayKey(){return new Date().toISOString().slice(0,10)}
 function planDayKeys(plan=PLAN()){return Object.keys(plan||{}).filter(k=>Array.isArray(plan[k]))}
 function dayLabel(k){return 'Tag '+k}
@@ -1775,8 +1775,15 @@ function trainingHubPage(){
   return `<div class="plan-day-tabs"><button type="button" data-training-view="start" class="${view==='start'?'active':''}">Trainieren</button><button type="button" data-training-view="plan" class="${view==='plan'?'active':''}">Plan</button></div>${view==='plan'?planPage():trainingPage()}`
 }
 function nutritionPage(){return `<section class="card"><h2>Ernährung</h2><p>Für die Ernährungserfassung nutzt du aktuell YAZIO weiter – das läuft unverändert parallel.</p></section><section class="card"><h2>Im Aufbau</h2><p>Hier entstehen später eine Kalorien-/Makro-Übersicht und Empfehlungen, sobald eine Datenanbindung (z. B. über Apple Health) steht.</p></section>`}
-const TAB_ORDER=['Start','Recovery','Training','Ernährung','Daten/Historie'];
-const TAB_PAGES={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage};
+function settingsPage(){
+  const phases=[['aufbau','Aufbau'],['erhalt','Erhalt'],['diaet','Diät']];
+  return `<section class="card"><h2>Einstellungen</h2>
+  <h3>Zielphase</h3>
+  <div class="timer-actions">${phases.map(([val,label])=>`<button data-set-phase="${val}" class="${S.prefs.goalPhase===val?'primary':''}">${label}</button>`).join('')}</div>
+  <p class="hint">Dient aktuell nur zur Anzeige und Speicherung. Training und Ernährung (YAZIO) werden dadurch noch nicht automatisch angepasst – das ist bewusst minimal gehalten als Grundlage für spätere Verknüpfung mit Trainings- und Ernährungs-Tab.</p></section>`
+}
+const TAB_ORDER=['Start','Recovery','Training','Ernährung','Daten/Historie','Einstellungen'];
+const TAB_PAGES={Start:startPage,Recovery:recoveryPage,Training:trainingHubPage,'Daten/Historie':historyDataPage,Ernährung:nutritionPage,Einstellungen:settingsPage};
 function tabPeekHtml(name){return name?`<div class="tab-peek">${(TAB_PAGES[name]||trainingHubPage)()}</div>`:'<div class="tab-peek empty"></div>'}
 function versionFooterHtml(){return `<p class="hint" style="text-align:center;opacity:.6;margin:8px 0 0">v${APP_VERSION} · ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</p>`}
 function app(){
@@ -2606,14 +2613,14 @@ document.addEventListener('click',e=>{
 },true);
 
 document.addEventListener('click',e=>{
-const b=e.target.closest('button');if(!b)return;if(b.dataset.start)chooseMode(b.dataset.start);else if(b.dataset.mode)openWorkout(b.dataset.day,b.dataset.mode);else if(b.dataset.stop!==undefined){stopTimer();hideModal()}else if(b.dataset.add){adjustRunningTimer(+b.dataset.add)}else if(b.dataset.timerPreset){setRunningTimer(+b.dataset.timerPreset)}else if(b.dataset.timerClose!==undefined)hideModal();else if(b.dataset.summaryClose!==undefined)hideModal();else if(b.dataset.continue)hideModal();else if(b.dataset.tab){S.tab=b.dataset.tab;save();app()}else if(b.dataset.trainingView){S.trainingView=b.dataset.trainingView;save();app()}else if(b.dataset.addPlan){S.plan[b.dataset.addPlan].push(['Neue Übung',3,10,1,0]);save();app()}else if(b.dataset.remove){S.plan[b.dataset.remove].splice(+b.dataset.i,1);save();app()}else if(b.dataset.export)fullExport();else if(b.dataset.coachExport)coachExport();else if(b.dataset.import)$('#importFile').click();else if(b.dataset.clearHistory&&confirm('Nur die Trainingshistorie wirklich löschen? Plan und Einstellungen bleiben erhalten.')){S.history=[];save();app()}});
+const b=e.target.closest('button');if(!b)return;if(b.dataset.start)chooseMode(b.dataset.start);else if(b.dataset.mode)openWorkout(b.dataset.day,b.dataset.mode);else if(b.dataset.stop!==undefined){stopTimer();hideModal()}else if(b.dataset.add){adjustRunningTimer(+b.dataset.add)}else if(b.dataset.timerPreset){setRunningTimer(+b.dataset.timerPreset)}else if(b.dataset.timerClose!==undefined)hideModal();else if(b.dataset.summaryClose!==undefined)hideModal();else if(b.dataset.continue)hideModal();else if(b.dataset.tab){S.tab=b.dataset.tab;save();app()}else if(b.dataset.trainingView){S.trainingView=b.dataset.trainingView;save();app()}else if(b.dataset.addPlan){S.plan[b.dataset.addPlan].push(['Neue Übung',3,10,1,0]);save();app()}else if(b.dataset.remove){S.plan[b.dataset.remove].splice(+b.dataset.i,1);save();app()}else if(b.dataset.export)fullExport();else if(b.dataset.coachExport)coachExport();else if(b.dataset.import)$('#importFile').click();else if(b.dataset.clearHistory&&confirm('Nur die Trainingshistorie wirklich löschen? Plan und Einstellungen bleiben erhalten.')){S.history=[];save();app()}else if(b.dataset.setPhase){S.prefs.goalPhase=b.dataset.setPhase;save();app()}});
 document.addEventListener('input',e=>{if(e.target.matches('[data-fixed]')){const name=PLAN()[day][idx][0],key=day+'|'+name;S.notes[key]=e.target.value;save()}else if(e.target.dataset.recovery){const k=todayKey();S.recovery[k]=S.recovery[k]||{};S.recovery[k][e.target.dataset.recovery]=+e.target.value;save();const b=e.target.closest('.rating-slider')?.querySelector('.rating-head b');if(b)b.textContent=e.target.value}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-active-plan]')){const id=e.target.value;if(S.plans[id]){S.activePlan=id;syncActivePlanPointer();save();app()}return}if(e.target.matches('[data-rest]')){S.settings[day+'|'+PLAN()[day][idx][0]]={rest:Math.max(15,+e.target.value||120)};save()}if(e.target.dataset.set!==undefined)sets[+e.target.dataset.set][e.target.dataset.field]=+e.target.value;if(e.target.dataset.plan){const x=e.target,d=S.plan[x.dataset.plan][+x.dataset.i],f=+x.dataset.f;d[f]=f===0?x.value:+x.value;save()}});$('#timer').addEventListener('click',e=>{
   if(e.target.closest('[data-stop]')){
     e.preventDefault();e.stopPropagation();stopTimer();return;
   }
   timerDialog();
-});$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text()),d=x.data||x;if(!usable(d))throw Error();download({schema:'fitness-os-backup',version:APP_VERSION,exportedAt:new Date().toISOString(),data:S},'Fitness-OS-Sicherung-vor-Import.json');Object.assign(S,{history:d.history||d.sessions||[],settings:d.settings||S.settings,notes:d.notes||S.notes,images:d.images||S.images});
+});$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text()),d=x.data||x;if(!usable(d))throw Error();download({schema:'fitness-os-backup',version:APP_VERSION,exportedAt:new Date().toISOString(),data:S},'Fitness-OS-Sicherung-vor-Import.json');Object.assign(S,{history:d.history||d.sessions||[],settings:d.settings||S.settings,notes:d.notes||S.notes,images:d.images||S.images,prefs:d.prefs||S.prefs});
 if(d.plans&&typeof d.plans==='object'&&Object.keys(d.plans).length){
   S.plans=d.plans;
   S.activePlan=(d.activePlan&&S.plans[d.activePlan])?d.activePlan:Object.keys(S.plans)[0];
