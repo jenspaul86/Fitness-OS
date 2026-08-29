@@ -1548,7 +1548,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.30';
+const APP_VERSION='0.9.31';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
@@ -1899,7 +1899,19 @@ function showWorkoutOverview(){
   showModal(`<h2>Trainingsübersicht</h2>
     <p>Tag ${day} · Übung ${idx+1}/${PLAN()[day].length}</p>
     <div class="workout-overview-list">${list}</div>
-    <div class="timer-actions"><button class="primary" data-resume-workout>Training fortsetzen</button></div>`)
+    <div class="timer-actions"><button class="primary" data-resume-workout>Training fortsetzen</button><button class="danger" data-cancel-workout>Training abbrechen</button></div>`)
+}
+
+function cancelWorkout(){
+  if(!confirm('Training wirklich abbrechen? Bisherige Eingaben werden nicht gespeichert.'))return;
+  stopTimer();
+  $('#workout').classList.remove('show');
+  hideModal();
+  S.draft=[];
+  idx=0;
+  sets=[];
+  save();
+  app();
 }
 
 function weightStepFor(kg){return kg>=100?5:kg>=40?2.5:1}
@@ -2564,6 +2576,12 @@ document.addEventListener('click',e=>{
     e.preventDefault();e.stopImmediatePropagation();
     hideModal();
     renderExercise();
+    return;
+  }
+  const cancel=e.target.closest('[data-cancel-workout]');
+  if(cancel){
+    e.preventDefault();e.stopImmediatePropagation();
+    cancelWorkout();
     return;
   }
 },true);
