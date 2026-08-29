@@ -1421,7 +1421,7 @@ body:has(#workout.show){
 
 /* v0.9.8 — dynamic plan wizard + image editor */
 .plan-day-tabs.dynamic{display:flex!important;overflow-x:auto;gap:6px;scrollbar-width:none}.plan-day-tabs.dynamic::-webkit-scrollbar{display:none}.plan-day-tabs.dynamic button{flex:0 0 auto;min-width:92px}
-.day-management{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.day-management{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;margin-bottom:56px}
 .plan-wizard{display:grid;gap:15px}.wizard-back{background:none!important;border:0!important;color:#299cff!important;text-align:left;padding:0!important;font-size:.85rem}
 .plan-wizard h2{font-size:1.65rem;line-height:1.15;margin:8px 0}.frequency-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .frequency-grid button{min-height:106px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}.frequency-grid b{font-size:1.55rem}.frequency-grid span{font-size:.85rem}
@@ -1548,7 +1548,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.29';
+const APP_VERSION='0.9.30';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
