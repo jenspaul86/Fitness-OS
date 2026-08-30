@@ -389,10 +389,10 @@
   .exercise-strip::-webkit-scrollbar{display:none}
 
   .exercise-strip button{
-    flex:0 0 38px;
-    width:38px;
-    height:38px;
-    min-width:38px;
+    flex:0 0 52px;
+    width:52px;
+    height:52px;
+    min-width:52px;
     padding:0!important;
     border-radius:11px!important;
     font-size:.72rem!important;
@@ -559,11 +559,11 @@
     align-items:center!important;
   }
   #workout .exercise-strip button{
-    flex:0 0 32px!important;
-    width:32px!important;
-    min-width:32px!important;
-    height:32px!important;
-    min-height:32px!important;
+    flex:0 0 46px!important;
+    width:46px!important;
+    min-width:46px!important;
+    height:46px!important;
+    min-height:46px!important;
     border-radius:9px!important;
     font-size:.66rem!important;
   }
@@ -805,13 +805,13 @@
 @media (max-width:500px){
   html,body{height:100%;overflow:hidden!important}
   #workout{position:fixed!important;inset:0!important;height:100dvh!important;overflow:hidden!important;padding:max(5px,env(safe-area-inset-top)) 8px calc(48px + env(safe-area-inset-bottom))!important}
-  #workout .workout-inner{height:100%!important;min-height:0!important;display:grid!important;grid-template-rows:32px 5px 34px 58px minmax(0,1fr)!important;gap:4px!important;overflow:hidden!important}
+  #workout .workout-inner{height:100%!important;min-height:0!important;display:grid!important;grid-template-rows:32px 5px 52px 58px minmax(0,1fr)!important;gap:4px!important;overflow:hidden!important}
   #workout .workout-head{height:32px!important;min-height:32px!important;margin:0!important}
   #workout .workout-head span{font-size:.67rem!important;white-space:nowrap!important}
   #workout .workout-head button{height:30px!important;min-height:30px!important;padding:3px 7px!important;font-size:.69rem!important;border-radius:9px!important}
   #workout .progress{height:5px!important;margin:0!important}
-  #workout .exercise-strip{height:34px!important;min-height:34px!important;margin:0!important;padding:0!important;gap:4px!important;overflow:hidden!important;justify-content:space-between!important}
-  #workout .exercise-strip button{flex:0 1 34px!important;width:34px!important;min-width:0!important;height:32px!important;min-height:32px!important;padding:0!important;border-radius:9px!important;font-size:.64rem!important}
+  #workout .exercise-strip{display:flex!important;flex-wrap:nowrap!important;height:52px!important;min-height:52px!important;margin:0!important;padding:0!important;gap:4px!important;overflow:hidden!important;justify-content:space-between!important}
+  #workout .exercise-strip button{flex:0 1 48px!important;width:48px!important;min-width:0!important;height:46px!important;min-height:46px!important;padding:0!important;border-radius:9px!important;font-size:.64rem!important}
   #workout section.card.recommend{height:58px!important;min-height:58px!important;max-height:58px!important;margin:0!important;padding:6px 8px!important;border-radius:12px!important;display:grid!important;grid-template-columns:auto 1fr!important;grid-template-rows:20px 22px!important;gap:1px 6px!important;overflow:hidden!important}
   #workout .recommend h2{grid-column:1!important;margin:0!important;font-size:.69rem!important;line-height:20px!important;white-space:nowrap!important}
   #workout .recommend strong{grid-column:2!important;font-size:.78rem!important;line-height:20px!important;white-space:nowrap!important}
@@ -883,8 +883,8 @@
   text-align:center;
 }
 .workout-overview-row .thumb{
-  width:38px;
-  height:38px;
+  width:52px;
+  height:52px;
   border-radius:10px;
   background:#1b2837;
   overflow:hidden;
@@ -899,7 +899,7 @@
   object-fit:cover;
 }
 .workout-overview-row{
-  grid-template-columns:42px 1fr auto!important;
+  grid-template-columns:56px 1fr auto!important;
 }
 .image-actions{
   display:flex;
@@ -961,11 +961,11 @@
   }
 
   #workout .exercise-strip button{
-    flex-basis:38px!important;
-    width:38px!important;
-    min-width:38px!important;
-    height:38px!important;
-    min-height:38px!important;
+    flex-basis:52px!important;
+    width:52px!important;
+    min-width:52px!important;
+    height:52px!important;
+    min-height:52px!important;
     border-radius:11px!important;
     font-size:.73rem!important;
   }
@@ -1516,7 +1516,7 @@ body:has(#workout.show){
     grid-template-rows:
       32px
       5px
-      34px
+      52px
       minmax(0,1fr)!important;
     gap:4px!important;
     height:100%!important;
@@ -1548,7 +1548,7 @@ body:has(#workout.show){
 </aside><section class="modal" id="modal"></section><input id="exerciseImageInput" type="file" accept="image/*" hidden><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 const KEY='fitness-os-v7';
-const APP_VERSION='0.9.32';
+const APP_VERSION='0.9.33';
 const DEFAULT_PLAN={A:[['Beinbeugen im Sitzen',3,10,1,120],['Pendelum Squat',2,8,1,25],['Butterfly Reverse weit A',2,10,1,75],['Brustpresse schräg',1,8,1,75],['Latzug weit mit Obergriff',1,10,1,125],['Nackenheben Unilateral',2,10,1,50],['Beinstrecken',1,10,1,90],['Brustpresse',1,8,1,105],['Rudern einarmig A',2,10,1,95]],B:[['Latzug weit mit Obergriff Tag B',2,10,1,125],['Nackenheben Unilateral',2,10,2,44],['Butterfly weit',2,10,1,85],['Rumänisches Kreuzheben',2,10,2,70],['Beinstrecken Tag B',2,10,1,90],['Butterfly Reverse weit',1,10,1,70],['Brustpresse schräg Tag B',1,10,1,75],['Rudern einarmig B',2,10,1,95],['Schulterdrücken im Stehen',2,8,1,55]]};
 const clone=o=>JSON.parse(JSON.stringify(o)); const esc=s=>String(s??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); const $=q=>document.querySelector(q);
 function usable(x){return x&&typeof x==='object'&&(Array.isArray(x.history)||Array.isArray(x.sessions)||x.plan||x.PLan)}
